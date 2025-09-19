@@ -14,8 +14,12 @@ export class ProductsService {
     return this.prisma.product.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  findOne(id: string) {
+    return this.prisma.product.findFirst({
+      where: {
+        id,
+      },
+    });
   }
 
   update(id: number, updateProductInput: UpdateProductInput) {
