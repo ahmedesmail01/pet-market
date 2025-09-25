@@ -40,13 +40,14 @@ export const ProductStore = signalStore(
     loadProducts() {
       patchState(store, { loading: true });
       apollo
-        .watchQuery<{ products: Product[] }>({
-          query: GET_PRODUCTS,
-        })
+        .watchQuery<{ products: Product[] }>({ query: GET_PRODUCTS })
         .valueChanges.pipe(
           tap({
             next: ({ data }) =>
-              patchState(store, { products: data?.products, loading: false }),
+              patchState(store, {
+                products: data?.products as Product[],
+                loading: false,
+              }),
             error: (error) =>
               patchState(store, { error: error.message, loading: false }),
           })
