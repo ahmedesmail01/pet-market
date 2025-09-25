@@ -8,6 +8,12 @@
     },
     {
       "path": "./apps/pet-market-be"
+    },
+    {
+      "path": "./apps/pet-market-web-e2e"
+    },
+    {
+      "path": "./apps/pet-market-web"
     }
   ]
 }
