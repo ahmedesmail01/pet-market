@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { afterNextRender, Component, inject } from '@angular/core';
+import { ProductStore } from '../stores/product.store';
 
 @Component({
   selector: 'app-products',
@@ -6,4 +7,12 @@ import { Component } from '@angular/core';
   templateUrl: './products.html',
   styleUrl: './products.scss',
 })
-export class Products {}
+export class Products {
+  ProductStore = inject(ProductStore);
+
+  constructor() {
+    afterNextRender(() => {
+      this.ProductStore.loadProducts();
+    });
+  }
+}
