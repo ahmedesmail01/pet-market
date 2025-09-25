@@ -1,15 +1,9 @@
 import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { Product } from '@prisma/client';
-import { Apollo, gql, QueryRef } from 'apollo-angular';
+import { Apollo, gql } from 'apollo-angular';
 import { tap } from 'rxjs';
 
-// Define the proper response type
-type GetProductsResult = {
-  products: Product[];
-};
-
-// Properly type the GraphQL query
 const GET_PRODUCTS = gql`
   query GetProducts {
     products {
@@ -21,7 +15,7 @@ const GET_PRODUCTS = gql`
       stripePriceId
     }
   }
-` as import('../../../../../node_modules/@apollo/client/core').TypedDocumentNode<GetProductsResult>;
+`;
 
 export interface ProductState {
   products: Product[];
@@ -38,28 +32,23 @@ const initialState: ProductState = {
 };
 
 export const ProductStore = signalStore(
-  { providedIn: 'root' },
+  {
+    providedIn: 'root',
+  },
   withState(initialState),
   withMethods((store, apollo = inject(Apollo)) => ({
     loadProducts() {
-      patchState(store, { loading: true, error: null });
-
-      const q: QueryRef<GetProductsResult> =
-        apollo.watchQuery<GetProductsResult>({ query: GET_PRODUCTS });
-
-      q.valueChanges
-        .pipe(
+      patchState(store, { loading: true });
+      apollo
+        .watchQuery<{ products: Product[] }>({
+          query: GET_PRODUCTS,
+        })
+        .valueChanges.pipe(
           tap({
             next: ({ data }) =>
-              patchState(store, {
-                products: data?.products || [],
-                loading: false,
-              }),
+              patchState(store, { products: data?.products, loading: false }),
             error: (error) =>
-              patchState(store, {
-                error: error.message ?? 'Unknown error',
-                loading: false,
-              }),
+              patchState(store, { error: error.message, loading: false }),
           })
         )
         .subscribe();
