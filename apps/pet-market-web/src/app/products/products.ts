@@ -13,6 +13,7 @@ export class Products {
   constructor() {
     afterNextRender(() => {
       this.ProductStore.loadProducts();
+      console.log('all products is :', this.ProductStore.products());
     });
   }
 }
