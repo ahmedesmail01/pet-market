@@ -1,58 +1,92 @@
+import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { inject } from '@angular/core';
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
-import { Product } from '@prisma/client';
 import { Apollo, gql } from 'apollo-angular';
-import { tap } from 'rxjs';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { pipe, switchMap, tap, catchError, of } from 'rxjs';
 
+// GraphQL Query
 const GET_PRODUCTS = gql`
   query GetProducts {
     products {
       id
       name
       description
-      price
       image
+      price
       stripePriceId
     }
   }
 `;
 
-export interface ProductState {
+// Product Interface
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  price: number;
+  stripePriceId: string;
+}
+
+// Store State Interface
+interface ProductState {
   products: Product[];
-  featuredProducts: Product[];
+  selectedProduct: Product | null;
   loading: boolean;
   error: string | null;
 }
 
+// Initial State
 const initialState: ProductState = {
   products: [],
-  featuredProducts: [],
+  selectedProduct: null,
   loading: false,
   error: null,
 };
 
+// Product Store
 export const ProductStore = signalStore(
-  {
-    providedIn: 'root',
-  },
+  { providedIn: 'root' },
   withState(initialState),
   withMethods((store, apollo = inject(Apollo)) => ({
-    loadProducts() {
-      patchState(store, { loading: true });
-      apollo
-        .watchQuery<{ products: Product[] }>({ query: GET_PRODUCTS })
-        .valueChanges.pipe(
-          tap({
-            next: ({ data }) =>
+    // Load all products
+    loadProducts: rxMethod<void>(
+      pipe(
+        tap(() => patchState(store, { loading: true, error: null })),
+        switchMap(() =>
+          apollo.query<{ products: Product[] }>({ query: GET_PRODUCTS }).pipe(
+            tap((result) => {
               patchState(store, {
-                products: data?.products as Product[],
+                products: result?.data?.products as Product[],
                 loading: false,
-              }),
-            error: (error) =>
-              patchState(store, { error: error.message, loading: false }),
-          })
+              });
+            }),
+            catchError((error) => {
+              patchState(store, {
+                error: error.message,
+                loading: false,
+              });
+              return of(null);
+            })
+          )
         )
-        .subscribe();
+      )
+    ),
+
+    // Select a product by ID
+    selectProduct(id: string) {
+      const product = store.products().find((p) => p.id === id) || null;
+      patchState(store, { selectedProduct: product });
+    },
+
+    // Clear selected product
+    clearSelection() {
+      patchState(store, { selectedProduct: null });
+    },
+
+    // Reset store
+    reset() {
+      patchState(store, initialState);
     },
   }))
 );
