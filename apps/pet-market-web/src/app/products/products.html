@@ -1,4 +1,12 @@
-<p>products works!</p>
-<pre>
-    {{ProductStore}}
-</pre>
+<p>products workssss!</p>
+@if(ProductStore.loading()){
+<p>loading...</p>
+} @else if(ProductStore.error()){
+<div>{{ProductStore.error()}}</div>
+} @else if(ProductStore.products().length){
+<ul class="flex flex-col gap-10">
+  @for (product of ProductStore.products(); track product.id) {
+  <li>{{product | json}}</li>
+  }
+</ul>
+}

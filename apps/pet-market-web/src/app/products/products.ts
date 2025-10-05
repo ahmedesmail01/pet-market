@@ -1,9 +1,10 @@
 import { afterNextRender, Component, inject } from '@angular/core';
 import { ProductStore } from '../stores/product.store';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-products',
-  imports: [],
+  imports: [JsonPipe],
   templateUrl: './products.html',
   styleUrl: './products.scss',
 })
